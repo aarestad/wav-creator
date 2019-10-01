@@ -26,6 +26,8 @@ fn run() -> Result<(), pa::Error> {
     Ok(())
 }
 
+
+// stolen from https://stackoverflow.com/questions/203890/creating-sine-or-square-wave-in-c-sharp
 /* using System;
 using System.Collections.Generic;
 using System.IO;
