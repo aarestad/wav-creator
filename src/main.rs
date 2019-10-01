@@ -1,27 +1,66 @@
-extern crate sample;
+extern crate byteorder;
 
-use sample::{signal, Frame, Sample, Signal, ToFrameSliceMut};
+use std::{io};
+use std::fs::File;
+use std::f64::consts::PI;
+use byteorder::{BigEndian, WriteBytesExt, LittleEndian};
 
-const FRAMES_PER_BUFFER: u32 = 512;
-const NUM_CHANNELS: i32 = 1;
-const SAMPLE_RATE: f64 = 44_100.0;
+//const FRAMES_PER_BUFFER: u32 = 512;
+//const NUM_CHANNELS: i32 = 1;
+const SAMPLE_RATE: i32 = 44_100;
+const TAU: f64 = 2.0 * PI;
 
-fn main() -> Result<(), pa::Error> {
-    run()
-}
+fn main() -> io::Result<()> {
+    let mut wav_output_file = File::create("a_four_forty.wav")?;
 
-fn run() -> Result<(), pa::Error> {
-    // Create a signal chain to play back 1 second of each oscillator at A4.
-    let a_four_forty = signal::rate(SAMPLE_RATE).const_hz(440.0);
-    let one_sec = SAMPLE_RATE as usize;
+    let format_chunk_size = 16;
+    let header_size = 8;
+    let format_type = 1i16;
+    let tracks = 1i16;
+    let bits_per_sample = 16i16;
+    let frame_size = tracks * ((bits_per_sample + 7) / 8);
+    let ms_duration = 1000;
 
-    let mut waves = a_four_forty.clone()
-        .sine().take(one_sec)
-        .chain(a_four_forty.clone().saw().take(one_sec))
-        .chain(a_four_forty.clone().square().take(one_sec))
-        .chain(a_four_forty.clone().noise_simplex().take(one_sec))
-        .chain(signal::noise(0).take(one_sec))
-        .map(|f| f.map(|s| s.to_sample::<f32>() * 0.2));
+    let bytes_per_second = SAMPLE_RATE * frame_size as i32;
+    let wave_size = 4;
+    let samples = SAMPLE_RATE * ms_duration / 1000;
+    let data_chunk_size = samples * frame_size as i32;
+    let chunk_size = wave_size + header_size + format_chunk_size + header_size + data_chunk_size;
+
+    // HEADER
+    wav_output_file.write_u32::<BigEndian>(0x46464952)?; // RIFF big-endian ("FFIR")
+    wav_output_file.write_i32::<LittleEndian>(chunk_size)?;
+    wav_output_file.write_u32::<BigEndian>(0x45564157)?; // WAVE big-endian
+
+    // "fmt " subchunk
+    wav_output_file.write_u32::<BigEndian>(0x20746D66)?; // "fmt " big-endian
+    wav_output_file.write_i32::<LittleEndian>(format_chunk_size);
+//    writer.Write(formatType);
+//    writer.Write(tracks);
+//    writer.Write(samplesPerSecond);
+//    writer.Write(bytes_per_second);
+//    writer.Write(frameSize);
+//    writer.Write(bitsPerSample);
+
+    // "data" subchunk
+//    writer.Write(0x61746164); // = encoding.GetBytes("data")
+//    writer.Write(data_chunk_size);
+//    {
+//        double theta = frequency * TAU / (double)samplesPerSecond;
+//        // 'volume' is UInt16 with range 0 thru Uint16.MaxValue ( = 65 535)
+//        // we need 'amp' to have the range of 0 thru Int16.MaxValue ( = 32 767)
+//        double amp = volume >> 2; // so we simply set amp = volume / 2
+//        for (int step = 0; step < samples; step++)
+//        {
+//            short s = (short)(amp * Math.Sin(theta * (double)step));
+//            writer.Write(s);
+//        }
+//    }
+//
+//    mStrm.Seek(0, SeekOrigin.Begin);
+//    new System.Media.SoundPlayer(mStrm).Play();
+//    writer.Close();
+//    mStrm.Close();
 
     Ok(())
 }
