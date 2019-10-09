@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 portaudio = "0.7"
 byteorder = "1.3.2"
+sample = "0.10"
