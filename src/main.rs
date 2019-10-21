@@ -5,6 +5,7 @@ use sample::{signal, Signal};
 use std::fs::File;
 use std::io;
 use std::io::Write;
+use std::i16;
 
 fn main() -> io::Result<()> {
     let data_str = "data".as_bytes();
@@ -68,11 +69,19 @@ fn main() -> io::Result<()> {
     wav_output_file.write(data_str)?;
     wav_output_file.write_u32::<LittleEndian>(data_chunk_size)?;
 
-    let signal = signal::rate(44_100.0).const_hz(440.0).sine().take(44_100);
+    let mut signal = signal::rate(44_100.0)
+        .const_hz(880.0)
+        .sine()
+        .scale_amp(i16::MAX as f64);
 
-    for frame in signal {
-        let signal = frame[0] as i32;
-        wav_output_file.write_i32::<LittleEndian>(signal)?;
+    let mut signal_counter = 0;
+
+    while signal_counter < 44_100 {
+        let sample = signal.next()[0];
+
+        println!("{:?}", sample as i32);
+        wav_output_file.write_i32::<LittleEndian>(sample as i32)?;
+        signal_counter += 1;
     }
 
     Ok(())
