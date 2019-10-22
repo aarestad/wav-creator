@@ -2,6 +2,7 @@ use std::{fs::File, i16, io, io::Write, path::Path};
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use sample::{signal, Signal};
+use std::io::BufWriter;
 
 /// Chunk labels
 const RIFF_LABEL: &[u8] = b"RIFF";
@@ -59,12 +60,12 @@ const NUM_INTERVALS: u32 = 12;
 /// of twelve `duration_s`-long intervals, starting at a half step going up to an octave, each
 /// with a `freq` frequency sine wave as the base.
 fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Result<()> {
-    let bytes_per_sample: u16 = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
+    let bytes_per_frame: u16 = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
     let num_samples: u32 = SAMPLE_RATE * duration_s;
-    let data_chunk_size: u32 = num_samples * (bytes_per_sample as u32) * NUM_INTERVALS;
+    let data_chunk_size: u32 = num_samples * (bytes_per_frame as u32) * NUM_INTERVALS;
     let file_size: u32 = 4 + HEADER_SIZE + FMT_CHUNK_SIZE + HEADER_SIZE + data_chunk_size;
 
-    let mut wav_output_file = File::create(file_name)?;
+    let mut wav_output_file = BufWriter::with_capacity(2 << 20, File::create(file_name)?);
 
     wav_output_file.write(RIFF_LABEL)?;
     wav_output_file.write_u32::<LittleEndian>(file_size)?;
@@ -75,8 +76,8 @@ fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Resu
     wav_output_file.write_u16::<LittleEndian>(FORMAT_TYPE)?;
     wav_output_file.write_u16::<LittleEndian>(NUM_CHANNELS)?;
     wav_output_file.write_u32::<LittleEndian>(SAMPLE_RATE)?;
-    wav_output_file.write_u32::<LittleEndian>(SAMPLE_RATE * (bytes_per_sample as u32))?;
-    wav_output_file.write_u16::<LittleEndian>(bytes_per_sample)?;
+    wav_output_file.write_u32::<LittleEndian>(SAMPLE_RATE * (bytes_per_frame as u32))?;
+    wav_output_file.write_u16::<LittleEndian>(bytes_per_frame)?;
     wav_output_file.write_u16::<LittleEndian>(BITS_PER_SAMPLE)?;
 
     wav_output_file.write(DATA_LABEL)?;
@@ -102,8 +103,7 @@ fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Resu
             .take(num_samples as usize);
 
         for signal in signal_iter {
-            let signal_val = signal[0];
-            wav_output_file.write_i16::<LittleEndian>(signal_val as i16)?;
+            wav_output_file.write_i16::<LittleEndian>(signal[0] as i16)?;
         }
     }
 
