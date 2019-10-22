@@ -2,3 +2,4 @@
 **/*.rs.bk
 *.iml
 /a_four_forty.wav
+/venv/

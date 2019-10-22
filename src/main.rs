@@ -69,18 +69,18 @@ fn main() -> io::Result<()> {
     wav_output_file.write(data_str)?;
     wav_output_file.write_u32::<LittleEndian>(data_chunk_size)?;
 
-    let mut signal = signal::rate(44_100.0)
-        .const_hz(880.0)
+    let mut signal = signal::rate(sample_rate as f64)
+        .const_hz(440.0)
         .sine()
         .scale_amp(i16::MAX as f64);
 
     let mut signal_counter = 0;
 
-    while signal_counter < 44_100 {
-        let sample = signal.next()[0];
+    while signal_counter < sample_rate {
+        let sample = signal.next()[0] as i16;
 
-        println!("{:?}", sample as i32);
-        wav_output_file.write_i32::<LittleEndian>(sample as i32)?;
+        println!("{:?}", sample);
+        wav_output_file.write_i16::<LittleEndian>(sample)?;
         signal_counter += 1;
     }
 
