@@ -69,7 +69,7 @@ fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Resu
 
     wav_output_file.write(RIFF_LABEL)?;
     wav_output_file.write_u32::<LittleEndian>(file_size)?;
-    wav_output_file.write(FORMAT_LABEL)?; // WAVE big-endian
+    wav_output_file.write(FORMAT_LABEL)?;
 
     wav_output_file.write(FMT_LABEL)?;
     wav_output_file.write_u32::<LittleEndian>(FMT_CHUNK_SIZE)?;
