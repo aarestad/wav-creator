@@ -92,7 +92,6 @@ fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Resu
             .scale_amp((amp / 2).into());
 
         let freq_multiple = twelfth_root_of_two.powi(num_half_steps);
-        println!("{:?}", freq_multiple);
 
         let piano_half_steps_above = signal::rate(SAMPLE_RATE.into())
             .const_hz(freq * freq_multiple)
