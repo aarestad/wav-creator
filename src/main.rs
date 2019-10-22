@@ -1,6 +1,5 @@
 use std::{fs::File, i16, io, io::Write, path::Path};
 
-use byteorder::{LittleEndian, WriteBytesExt};
 use sample::{signal, Signal};
 use std::io::BufWriter;
 
@@ -68,20 +67,20 @@ fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Resu
     let mut wav_output_file = BufWriter::with_capacity(2 << 20, File::create(file_name)?);
 
     wav_output_file.write(RIFF_LABEL)?;
-    wav_output_file.write_u32::<LittleEndian>(file_size)?;
-    wav_output_file.write(FORMAT_LABEL)?;
+    wav_output_file.write(&file_size.to_le_bytes())?;
+    wav_output_file.write(&FORMAT_LABEL)?;
 
     wav_output_file.write(FMT_LABEL)?;
-    wav_output_file.write_u32::<LittleEndian>(FMT_CHUNK_SIZE)?;
-    wav_output_file.write_u16::<LittleEndian>(FORMAT_TYPE)?;
-    wav_output_file.write_u16::<LittleEndian>(NUM_CHANNELS)?;
-    wav_output_file.write_u32::<LittleEndian>(SAMPLE_RATE)?;
-    wav_output_file.write_u32::<LittleEndian>(SAMPLE_RATE * (bytes_per_frame as u32))?;
-    wav_output_file.write_u16::<LittleEndian>(bytes_per_frame)?;
-    wav_output_file.write_u16::<LittleEndian>(BITS_PER_SAMPLE)?;
+    wav_output_file.write(&FMT_CHUNK_SIZE.to_le_bytes())?;
+    wav_output_file.write(&FORMAT_TYPE.to_le_bytes())?;
+    wav_output_file.write(&NUM_CHANNELS.to_le_bytes())?;
+    wav_output_file.write(&SAMPLE_RATE.to_le_bytes())?;
+    wav_output_file.write(&(SAMPLE_RATE * (bytes_per_frame as u32)).to_le_bytes())?;
+    wav_output_file.write(&bytes_per_frame.to_le_bytes())?;
+    wav_output_file.write(&BITS_PER_SAMPLE.to_le_bytes())?;
 
     wav_output_file.write(DATA_LABEL)?;
-    wav_output_file.write_u32::<LittleEndian>(data_chunk_size)?;
+    wav_output_file.write(&data_chunk_size.to_le_bytes())?;
 
     let twelfth_root_of_two = 2.0f64.powf(1.0 / 12.0);
 
@@ -103,7 +102,7 @@ fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Resu
             .take(num_samples as usize);
 
         for signal in signal_iter {
-            wav_output_file.write_i16::<LittleEndian>(signal[0] as i16)?;
+            wav_output_file.write(&(signal[0] as i16).to_le_bytes())?;
         }
     }
 
