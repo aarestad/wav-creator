@@ -1,7 +1,6 @@
-use std::{fs::File, i16, io, io::Write, path::Path};
+use std::{fs::File, i16, io, io::{Write, BufWriter}, path::Path};
 
 use sample::{signal, Signal};
-use std::io::BufWriter;
 
 /// Chunk labels
 const RIFF_LABEL: &[u8] = b"RIFF";
