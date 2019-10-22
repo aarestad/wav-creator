@@ -36,3 +36,5 @@ explain how the chaining works
 Why aren't functions like `sqrt` and `powf` const? - https://github.com/rust-lang/rust/issues/57563
 
 is `extern crate` required?
+
+add BuffWriter to speed things up quite a bit
