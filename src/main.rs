@@ -106,8 +106,8 @@ fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Resu
             .take(num_samples as usize);
 
         for signal in signal_iter {
-            let x = signal[0];
-            wav_output_file.write_i16::<LittleEndian>(x as i16)?;
+            let signal_val = signal[0];
+            wav_output_file.write_i16::<LittleEndian>(signal_val as i16)?;
         }
     }
 
