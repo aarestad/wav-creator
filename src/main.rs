@@ -25,15 +25,6 @@ const BITS_PER_SAMPLE: u16 = 16u16;
 /// Mono (for now
 const NUM_CHANNELS: u16 = 1u16;
 
-fn main() -> io::Result<()> {
-    write_wav(
-        1000,
-        440.0,
-        i16::MAX,
-        Path::new("a_four_forty.wav"),
-    )
-}
-
 ///
 /// Write a WAV file to `file_name`
 ///
@@ -66,15 +57,16 @@ fn main() -> io::Result<()> {
 /// Sample rate: 44,100 samples/sec
 /// Bits per sample: 16
 /// Channels: 1 (monoaural)
-/// The sound produced is a `ms_duration` millisecond--long sine wave at `freq` Hz, scaled to `amp` amplitude
+/// The sound produced is a `duration_s` second-long sine wave at `freq` Hz, added to a
+/// `freq * 1.5` Hz sine wave, each scaled to `amp/2` amplitude
 fn write_wav(
-    ms_duration: u32,
+    duration_s: u32,
     freq: f64,
     amp: i16,
     file_name: &Path,
 ) -> io::Result<()> {
     let bytes_per_sample: u16 = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
-    let num_samples: u32 = SAMPLE_RATE * ms_duration / 1000;
+    let num_samples: u32 = SAMPLE_RATE * duration_s;
     let data_chunk_size: u32 = num_samples * (bytes_per_sample as u32);
     let file_size: u32 = 4 + HEADER_SIZE + FMT_CHUNK_SIZE + HEADER_SIZE + data_chunk_size;
 
@@ -96,16 +88,34 @@ fn write_wav(
     wav_output_file.write(DATA_LABEL)?;
     wav_output_file.write_u32::<LittleEndian>(data_chunk_size)?;
 
-    let mut signal = signal::rate(SAMPLE_RATE.into())
+    let base_freq = signal::rate(SAMPLE_RATE.into())
         .const_hz(freq)
         .sine()
-        .scale_amp(amp.into());
+        .scale_amp((amp / 2).into());
 
-    for _ in 0..num_samples {
-        let sample = signal.next()[0];
+    let perfect_fifth_above = signal::rate(SAMPLE_RATE.into())
+        .const_hz(freq * 1.5)
+        .sine()
+        .scale_amp((amp / 2).into());
 
-        wav_output_file.write_i16::<LittleEndian>(sample as i16)?;
+    let signal_iter = base_freq
+        .add_amp(perfect_fifth_above)
+        .take(num_samples as usize);
+
+
+    for signal in signal_iter {
+        let x = signal[0];
+        wav_output_file.write_i16::<LittleEndian>(x as i16)?;
     }
 
     Ok(())
+}
+
+fn main() -> io::Result<()> {
+    write_wav(
+        1,
+        440.0,
+        i16::MAX,
+        Path::new("a440_plus_e660.wav"),
+    )
 }
