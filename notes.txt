@@ -3,6 +3,8 @@ one mentioned the "sample" library https://docs.rs/sample/0.10.0/sample/
 how to write out little-endian? https://docs.rs/byteorder/1.3.2/byteorder/
 how to play sounds? https://docs.rs/portaudio/0.7.0/portaudio/
 
+using ?
+
 error: `core::str::<impl str>::as_bytes` is not yet stable as a const fn
 had to add #![feature(const_str_as_bytes)]
 found the b"" notation by looking at the docs for as_bytes - feature no longer needed
