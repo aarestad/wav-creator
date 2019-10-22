@@ -1,10 +1,7 @@
+use std::{fs::File, i16, io, io::Write, path::Path};
+
 use byteorder::{LittleEndian, WriteBytesExt};
 use sample::{signal, Signal};
-use std::fs::File;
-use std::i16;
-use std::io;
-use std::io::Write;
-use std::path::Path;
 
 /// Chunk labels
 const RIFF_LABEL: &[u8] = b"RIFF";

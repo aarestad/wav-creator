@@ -27,10 +27,12 @@ the trait `std::convert::From<f64>` is not implemented for `i16` - probably beca
 <i16 as std::convert::From<std::num::NonZeroI16>>
 <i16 as std::convert::From<u8>>
 
+try_into() and into()
+
 switched to doing a dumb iteration with a counter to using `take` and directly iterating
 
 explain how the chaining works
 
 Why aren't functions like `sqrt` and `powf` const? - https://github.com/rust-lang/rust/issues/57563
 
-try_into() and into()
+is `extern crate` required?
