@@ -32,3 +32,5 @@ switched to doing a dumb iteration with a counter to using `take` and directly i
 explain how the chaining works
 
 Why aren't functions like `sqrt` and `powf` const? - https://github.com/rust-lang/rust/issues/57563
+
+try_into() and into()
