@@ -30,3 +30,5 @@ the trait `std::convert::From<f64>` is not implemented for `i16` - probably beca
 switched to doing a dumb iteration with a counter to using `take` and directly iterating
 
 explain how the chaining works
+
+Why aren't functions like `sqrt` and `powf` const?

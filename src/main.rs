@@ -22,7 +22,7 @@ const FORMAT_TYPE: u16 = 1u16;
 const SAMPLE_RATE: u32 = 44_100u32;
 /// Standard 16-bit sound resolution
 const BITS_PER_SAMPLE: u16 = 16u16;
-/// Mono (for now
+/// Mono (for now)
 const NUM_CHANNELS: u16 = 1u16;
 
 ///
@@ -57,18 +57,15 @@ const NUM_CHANNELS: u16 = 1u16;
 /// Sample rate: 44,100 samples/sec
 /// Bits per sample: 16
 /// Channels: 1 (monoaural)
-/// The sound produced is a `duration_s` second-long sine wave at `freq` Hz, added to a
-/// `freq * 1.5` Hz sine wave, each scaled to `amp/2` amplitude
-fn write_wav(
-    duration_s: u32,
-    freq: f64,
-    amp: i16,
-    file_name: &Path,
-) -> io::Result<()> {
+/// The sound produced is a 12*`duration_s` second-long tune, consisting
+/// of twelve `duration_s`-long intervals, starting at a half step going up to an octave, each
+/// with a `freq` frequency sine wave as the base.
+fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Result<()> {
     let bytes_per_sample: u16 = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
     let num_samples: u32 = SAMPLE_RATE * duration_s;
-    let data_chunk_size: u32 = num_samples * (bytes_per_sample as u32);
+    let data_chunk_size: u32 = num_samples * (bytes_per_sample as u32) * 12;
     let file_size: u32 = 4 + HEADER_SIZE + FMT_CHUNK_SIZE + HEADER_SIZE + data_chunk_size;
+    let twelfth_root_of_two = 2.0f64.powf(1.0 / 12.0);
 
     let mut wav_output_file = File::create(file_name)?;
 
@@ -88,34 +85,33 @@ fn write_wav(
     wav_output_file.write(DATA_LABEL)?;
     wav_output_file.write_u32::<LittleEndian>(data_chunk_size)?;
 
-    let base_freq = signal::rate(SAMPLE_RATE.into())
-        .const_hz(freq)
-        .sine()
-        .scale_amp((amp / 2).into());
+    for num_half_steps in 1..=12 {
+        let base_freq = signal::rate(SAMPLE_RATE.into())
+            .const_hz(freq)
+            .sine()
+            .scale_amp((amp / 2).into());
 
-    let perfect_fifth_above = signal::rate(SAMPLE_RATE.into())
-        .const_hz(freq * 1.5)
-        .sine()
-        .scale_amp((amp / 2).into());
+        let freq_multiple = twelfth_root_of_two.powi(num_half_steps);
+        println!("{:?}", freq_multiple);
 
-    let signal_iter = base_freq
-        .add_amp(perfect_fifth_above)
-        .take(num_samples as usize);
+        let piano_half_steps_above = signal::rate(SAMPLE_RATE.into())
+            .const_hz(freq * freq_multiple)
+            .sine()
+            .scale_amp((amp / 2).into());
 
+        let signal_iter = base_freq
+            .add_amp(piano_half_steps_above)
+            .take(num_samples as usize);
 
-    for signal in signal_iter {
-        let x = signal[0];
-        wav_output_file.write_i16::<LittleEndian>(x as i16)?;
+        for signal in signal_iter {
+            let x = signal[0];
+            wav_output_file.write_i16::<LittleEndian>(x as i16)?;
+        }
     }
 
     Ok(())
 }
 
 fn main() -> io::Result<()> {
-    write_wav(
-        1,
-        440.0,
-        i16::MAX,
-        Path::new("a440_plus_e660.wav"),
-    )
+    write_wav(1, 440.0, i16::MAX, Path::new("a440_intervals.wav"))
 }
