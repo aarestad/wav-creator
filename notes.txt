@@ -2,3 +2,14 @@ googled some tutorials
 one mentioned the "sample" library https://docs.rs/sample/0.10.0/sample/
 how to write out little-endian? https://docs.rs/byteorder/1.3.2/byteorder/
 how to play sounds? https://docs.rs/portaudio/0.7.0/portaudio/
+
+error: `core::str::<impl str>::as_bytes` is not yet stable as a const fn
+had to add #![feature(const_str_as_bytes)]
+found the b"" notation by looking at the docs for as_bytes - feature no longer needed
+
+into() function to cast nums
+the trait `std::convert::From<f64>` is not implemented for `i16` - probably because lossless conversion is not always possible
+<i16 as std::convert::From<bool>>
+<i16 as std::convert::From<i8>>
+<i16 as std::convert::From<std::num::NonZeroI16>>
+<i16 as std::convert::From<u8>>

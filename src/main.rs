@@ -5,29 +5,26 @@ use std::io;
 use std::io::Write;
 use std::i16;
 
-const CHUNK_LABEL: &[u8] = "RIFF".as_bytes();
-const FORMAT_LABEL: &[u8] = "WAVE".as_bytes();
-const DATA_LABEL: &[u8] = "data".as_bytes();
-const FMT_LABEL: &[u8] = "fmt ".as_bytes();
+const CHUNK_LABEL: &[u8] = b"RIFF";
+const FORMAT_LABEL: &[u8] = b"WAVE";
+const DATA_LABEL: &[u8] = b"data";
+const FMT_LABEL: &[u8] = b"fmt ";
 
 const PCM_CHUNK_SIZE: u32 = 16u32; // for PCM
-
 const HEADER_SIZE: u32 = 8u32; // 4 bytes for id + 4 bytes for size
+const FORMAT_TYPE: u16 = 1u16; // Linear PCM
+const SAMPLE_RATE: u32 = 44_100u32;
+const BITS_PER_SAMPLE: u16 = 16u16;
 
 fn main() -> io::Result<()> {
+    write(1, 1000, 440.0, i16::MAX.into())
+}
 
-    let format_type = 1u16; // Linear PCM
-    let num_channels = 1u16; // Mono; 2 is stereo
-    let sample_rate = 44_100u32;
-    let bits_per_sample = 16u16;
-    let block_align = (num_channels * bits_per_sample) / 8;
-    let byte_rate = sample_rate * num_channels as u32 * bits_per_sample as u32 / 8;
-    let ms_duration = 1000u32;
-
-    let wave_size = 4;
-    let samples = sample_rate * ms_duration / 1000;
-    let data_chunk_size = samples * block_align as u32;
-    let file_size = wave_size + HEADER_SIZE + PCM_CHUNK_SIZE + HEADER_SIZE + data_chunk_size;
+fn write(num_channels: u16, ms_duration: u32, freq: f64, amp: f64) -> io::Result<()> {
+    let bytes_per_sample = (num_channels * BITS_PER_SAMPLE) / 8;
+    let num_samples = SAMPLE_RATE * ms_duration / 1000;
+    let data_chunk_size = num_samples * (bytes_per_sample as u32);
+    let file_size = 4 + HEADER_SIZE + PCM_CHUNK_SIZE + HEADER_SIZE + data_chunk_size;
 
     let mut wav_output_file = File::create("a_four_forty.wav")?;
 
@@ -50,12 +47,12 @@ fn main() -> io::Result<()> {
     // 34        2   BitsPerSample    8 bits = 8, 16 bits = 16, etc.
     wav_output_file.write(FMT_LABEL)?;
     wav_output_file.write_u32::<LittleEndian>(PCM_CHUNK_SIZE)?;
-    wav_output_file.write_u16::<LittleEndian>(format_type)?;
+    wav_output_file.write_u16::<LittleEndian>(FORMAT_TYPE)?;
     wav_output_file.write_u16::<LittleEndian>(num_channels)?;
-    wav_output_file.write_u32::<LittleEndian>(sample_rate)?;
-    wav_output_file.write_u32::<LittleEndian>(byte_rate)?;
-    wav_output_file.write_u16::<LittleEndian>(block_align)?;
-    wav_output_file.write_u16::<LittleEndian>(bits_per_sample)?;
+    wav_output_file.write_u32::<LittleEndian>(SAMPLE_RATE)?;
+    wav_output_file.write_u32::<LittleEndian>(SAMPLE_RATE * (bytes_per_sample as u32))?;
+    wav_output_file.write_u16::<LittleEndian>(bytes_per_sample)?;
+    wav_output_file.write_u16::<LittleEndian>(BITS_PER_SAMPLE)?;
 
     // "data" subchunk
     // 36        4   Subchunk2ID      Contains the letters "data" (0x64617461 big-endian form).
@@ -64,19 +61,16 @@ fn main() -> io::Result<()> {
     wav_output_file.write(DATA_LABEL)?;
     wav_output_file.write_u32::<LittleEndian>(data_chunk_size)?;
 
-    let mut signal = signal::rate(sample_rate as f64)
-        .const_hz(440.0)
+    let mut signal = signal::rate(SAMPLE_RATE.into())
+        .const_hz(freq)
         .sine()
-        .scale_amp(i16::MAX as f64);
+        .scale_amp(amp);
 
-    let mut signal_counter = 0;
-
-    while signal_counter < sample_rate {
-        let sample = signal.next()[0] as i16;
+    for _ in 0 .. num_samples {
+        let sample = signal.next()[0];
 
         println!("{:?}", sample);
-        wav_output_file.write_i16::<LittleEndian>(sample)?;
-        signal_counter += 1;
+        wav_output_file.write_i16::<LittleEndian>(sample as i16)?;
     }
 
     Ok(())
