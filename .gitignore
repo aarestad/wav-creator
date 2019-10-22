@@ -1,5 +1,5 @@
 /target
 **/*.rs.bk
 *.iml
-/a_four_forty.wav
+*.wav
 /venv/
