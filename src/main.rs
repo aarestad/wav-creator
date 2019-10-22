@@ -1,5 +1,3 @@
-extern crate byteorder;
-
 use byteorder::{LittleEndian, WriteBytesExt};
 use sample::{signal, Signal};
 use std::fs::File;
