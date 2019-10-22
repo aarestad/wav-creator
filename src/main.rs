@@ -42,7 +42,7 @@ const NUM_INTERVALS: u32 = 12;
 /// 20          2           AudioFormat     1 (for PCM)
 /// 22          2           NumChannels     Mono = 1, Stereo = 2, etc.
 /// 24          4           SampleRate      Usually 44100 - samples per second
-/// 28          4           ByteRate        Bytes per second - sample rate times bytes per sample
+/// 28          4           ByteRate        Bytes per second (SampleRate * BlockAlign)
 /// 32          2           BlockAlign      Bytes per frame (BitsPerSample/8 * NumChannels)
 /// 34          2           BitsPerSample   Usually 16
 /// (SubChunk 2)
