@@ -5,6 +5,7 @@ use std::i16;
 use std::io;
 use std::io::Write;
 use std::path::Path;
+use std::convert::TryInto;
 
 /// Chunk labels
 const RIFF_LABEL: &[u8] = b"RIFF";
@@ -24,6 +25,7 @@ const SAMPLE_RATE: u32 = 44_100u32;
 const BITS_PER_SAMPLE: u16 = 16u16;
 /// Mono (for now)
 const NUM_CHANNELS: u16 = 1u16;
+const NUM_INTERVALS: u32 = 12;
 
 ///
 /// Write a WAV file to `file_name`
@@ -63,9 +65,8 @@ const NUM_CHANNELS: u16 = 1u16;
 fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Result<()> {
     let bytes_per_sample: u16 = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
     let num_samples: u32 = SAMPLE_RATE * duration_s;
-    let data_chunk_size: u32 = num_samples * (bytes_per_sample as u32) * 12;
+    let data_chunk_size: u32 = num_samples * (bytes_per_sample as u32) * NUM_INTERVALS;
     let file_size: u32 = 4 + HEADER_SIZE + FMT_CHUNK_SIZE + HEADER_SIZE + data_chunk_size;
-    let twelfth_root_of_two = 2.0f64.powf(1.0 / 12.0);
 
     let mut wav_output_file = File::create(file_name)?;
 
@@ -85,13 +86,15 @@ fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Resu
     wav_output_file.write(DATA_LABEL)?;
     wav_output_file.write_u32::<LittleEndian>(data_chunk_size)?;
 
-    for num_half_steps in 1..=12 {
+    let twelfth_root_of_two = 2.0f64.powf(1.0 / 12.0);
+
+    for num_half_steps in 1..=NUM_INTERVALS {
         let base_freq = signal::rate(SAMPLE_RATE.into())
             .const_hz(freq)
             .sine()
             .scale_amp((amp / 2).into());
 
-        let freq_multiple = twelfth_root_of_two.powi(num_half_steps);
+        let freq_multiple = twelfth_root_of_two.powi(num_half_steps.try_into().unwrap());
 
         let piano_half_steps_above = signal::rate(SAMPLE_RATE.into())
             .const_hz(freq * freq_multiple)
