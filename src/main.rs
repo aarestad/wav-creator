@@ -88,7 +88,6 @@ fn write(
     for _ in 0..num_samples {
         let sample = signal.next()[0];
 
-        println!("{:?}", sample);
         wav_output_file.write_i16::<LittleEndian>(sample as i16)?;
     }
 
