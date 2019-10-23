@@ -26,6 +26,7 @@ const NUM_INTERVALS: u32 = 12;
 /// octaves of 8 (starting at the bottom, A0, and every 12
 /// semitones after) are exact since they are 2-1 ratios of
 /// A4, which is defined at 440 Hz
+#[allow(clippy::unreadable_literal)]
 const PIANO_KEY_FREQS: [f64; 88] = [
     27.5, // A0
     29.135235094880603,
