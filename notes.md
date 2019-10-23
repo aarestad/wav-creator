@@ -42,3 +42,5 @@ is `extern crate` required?
 add BuffWriter to speed things up quite a bit
 
 turns out `byteorder` wasn't necessary! instead, use `to_le_bytes`/`to_be_bytes`/`to_ne_bytes`
+
+it's required to declare the type of `const`s, i.e. `const FMT_CHUNK_SIZE: u32 = 16;`

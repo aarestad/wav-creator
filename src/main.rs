@@ -9,17 +9,17 @@ const DATA_LABEL: &[u8] = b"data";
 const FMT_LABEL: &[u8] = b"fmt ";
 
 /// metadata chunk is always 16 bytes
-const FMT_CHUNK_SIZE: u32 = 16u32;
+const FMT_CHUNK_SIZE: u32 = 16;
 /// 8 bytes for 4-byte string label plus 4-byte subchunk size
-const HEADER_SIZE: u32 = 8u32;
+const HEADER_SIZE: u32 = 8;
 /// 1 means PCM
-const FORMAT_TYPE: u16 = 1u16;
+const FORMAT_TYPE: u16 = 1;
 /// Standard sample rate: 44.1 KHz
-const SAMPLE_RATE: u32 = 44_100u32;
+const SAMPLE_RATE: u32 = 44_100;
 /// Standard 16-bit sound resolution
-const BITS_PER_SAMPLE: u16 = 16u16;
+const BITS_PER_SAMPLE: u16 = 16;
 /// Mono (for now)
-const NUM_CHANNELS: u16 = 1u16;
+const NUM_CHANNELS: u16 = 1;
 const NUM_INTERVALS: u32 = 12;
 
 ///
