@@ -44,3 +44,13 @@ add BuffWriter to speed things up quite a bit
 turns out `byteorder` wasn't necessary! instead, use `to_le_bytes`/`to_be_bytes`/`to_ne_bytes`
 
 it's required to declare the type of `const`s, i.e. `const FMT_CHUNK_SIZE: u32 = 16;`
+
+clippy:
+
+```
+error: handle written amount returned or use `Write::write_all` instead
+  --> src/main.rs:68:5
+   |
+68 |     wav_output_file.write(RIFF_LABEL)?;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+```

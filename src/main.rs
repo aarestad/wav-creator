@@ -65,21 +65,21 @@ fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Resu
 
     let mut wav_output_file = BufWriter::with_capacity(2 << 20, File::create(file_name)?);
 
-    wav_output_file.write(RIFF_LABEL)?;
-    wav_output_file.write(&file_size.to_le_bytes())?;
-    wav_output_file.write(&FORMAT_LABEL)?;
+    wav_output_file.write_all(RIFF_LABEL)?;
+    wav_output_file.write_all(&file_size.to_le_bytes())?;
+    wav_output_file.write_all(&FORMAT_LABEL)?;
 
-    wav_output_file.write(FMT_LABEL)?;
-    wav_output_file.write(&FMT_CHUNK_SIZE.to_le_bytes())?;
-    wav_output_file.write(&FORMAT_TYPE.to_le_bytes())?;
-    wav_output_file.write(&NUM_CHANNELS.to_le_bytes())?;
-    wav_output_file.write(&SAMPLE_RATE.to_le_bytes())?;
-    wav_output_file.write(&(SAMPLE_RATE * (bytes_per_frame as u32)).to_le_bytes())?;
-    wav_output_file.write(&bytes_per_frame.to_le_bytes())?;
-    wav_output_file.write(&BITS_PER_SAMPLE.to_le_bytes())?;
+    wav_output_file.write_all(FMT_LABEL)?;
+    wav_output_file.write_all(&FMT_CHUNK_SIZE.to_le_bytes())?;
+    wav_output_file.write_all(&FORMAT_TYPE.to_le_bytes())?;
+    wav_output_file.write_all(&NUM_CHANNELS.to_le_bytes())?;
+    wav_output_file.write_all(&SAMPLE_RATE.to_le_bytes())?;
+    wav_output_file.write_all(&(SAMPLE_RATE * (bytes_per_frame as u32)).to_le_bytes())?;
+    wav_output_file.write_all(&bytes_per_frame.to_le_bytes())?;
+    wav_output_file.write_all(&BITS_PER_SAMPLE.to_le_bytes())?;
 
-    wav_output_file.write(DATA_LABEL)?;
-    wav_output_file.write(&data_chunk_size.to_le_bytes())?;
+    wav_output_file.write_all(DATA_LABEL)?;
+    wav_output_file.write_all(&data_chunk_size.to_le_bytes())?;
 
     let twelfth_root_of_two = 2.0f64.powf(1.0 / 12.0);
 
@@ -101,7 +101,7 @@ fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Resu
             .take(num_samples as usize);
 
         for signal in signal_iter {
-            wav_output_file.write(&(signal[0] as i16).to_le_bytes())?;
+            wav_output_file.write_all(&(signal[0] as i16).to_le_bytes())?;
         }
     }
 
