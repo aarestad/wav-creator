@@ -22,6 +22,97 @@ const BITS_PER_SAMPLE: u16 = 16;
 const NUM_CHANNELS: u16 = 1;
 const NUM_INTERVALS: u32 = 12;
 
+const PIANO_KEY_FREQS: [f64; 88] = [
+    27.5,
+    29.135235094880603,
+    30.86770632850774,
+    32.703195662574814,
+    34.647828872108995,
+    36.70809598967593,
+    38.8908729652601,
+    41.20344461410873,
+    43.65352892912548,
+    46.24930283895429,
+    48.99942949771866,
+    51.91308719749314,
+    55.0,
+    58.270470189761205,
+    61.73541265701548,
+    65.40639132514963,
+    69.29565774421799,
+    73.41619197935186,
+    77.7817459305202,
+    82.40688922821747,
+    87.30705785825096,
+    92.49860567790859,
+    97.99885899543732,
+    103.82617439498628,
+    110.0,
+    116.54094037952241,
+    123.47082531403096,
+    130.81278265029925,
+    138.59131548843598,
+    146.83238395870373,
+    155.5634918610404,
+    164.81377845643493,
+    174.6141157165019,
+    184.99721135581717,
+    195.99771799087463,
+    207.65234878997256,
+    220.0,
+    233.08188075904482,
+    246.94165062806192,
+    261.6255653005985,
+    277.18263097687196,
+    293.66476791740746,
+    311.1269837220808,
+    329.62755691286986,
+    349.2282314330038,
+    369.99442271163434,
+    391.99543598174927,
+    415.3046975799451,
+    440.0,
+    466.1637615180899,
+    493.8833012561241,
+    523.2511306011974,
+    554.3652619537443,
+    587.3295358348153,
+    622.253967444162,
+    659.2551138257401,
+    698.456462866008,
+    739.988845423269,
+    783.9908719634989,
+    830.6093951598906,
+    880.0,
+    932.3275230361799,
+    987.7666025122483,
+    1046.5022612023947,
+    1108.7305239074885,
+    1174.6590716696305,
+    1244.507934888324,
+    1318.5102276514801,
+    1396.912925732016,
+    1479.977690846538,
+    1567.9817439269978,
+    1661.2187903197812,
+    1760.0,
+    1864.6550460723597,
+    1975.5332050244965,
+    2093.0045224047894,
+    2217.461047814977,
+    2349.318143339261,
+    2489.015869776648,
+    2637.0204553029603,
+    2793.825851464032,
+    2959.955381693076,
+    3135.9634878539955,
+    3322.4375806395624,
+    3520.0,
+    3729.3100921447194,
+    3951.066410048993,
+    4186.009044809579,
+];
+
 ///
 /// Write a WAV file to `file_name`
 ///
@@ -57,7 +148,7 @@ const NUM_INTERVALS: u32 = 12;
 /// The sound produced is a 12*`duration_s` second-long tune, consisting
 /// of twelve `duration_s`-long intervals, starting at a half step going up to an octave, each
 /// with a `freq` frequency sine wave as the base.
-fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Result<()> {
+fn write_wav(duration_s: u32, key_num: usize, amp: i16, file_name: &Path) -> io::Result<()> {
     let bytes_per_frame: u16 = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
     let num_samples: u32 = SAMPLE_RATE * duration_s;
     let data_chunk_size: u32 = num_samples * (bytes_per_frame as u32) * NUM_INTERVALS;
@@ -81,18 +172,14 @@ fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Resu
     wav_output_file.write_all(DATA_LABEL)?;
     wav_output_file.write_all(&data_chunk_size.to_le_bytes())?;
 
-    let twelfth_root_of_two = 2.0f64.powf(1.0 / 12.0);
-
     for num_half_steps in 1..=NUM_INTERVALS {
         let base_freq = signal::rate(SAMPLE_RATE.into())
-            .const_hz(freq)
+            .const_hz(PIANO_KEY_FREQS[key_num])
             .sine()
             .scale_amp((amp / 2).into());
 
-        let freq_multiple = twelfth_root_of_two.powi(num_half_steps as i32);
-
         let piano_half_steps_above = signal::rate(SAMPLE_RATE.into())
-            .const_hz(freq * freq_multiple)
+            .const_hz(PIANO_KEY_FREQS[key_num + num_half_steps as usize])
             .sine()
             .scale_amp((amp / 2).into());
 
@@ -109,5 +196,6 @@ fn write_wav(duration_s: u32, freq: f64, amp: i16, file_name: &Path) -> io::Resu
 }
 
 fn main() -> io::Result<()> {
-    write_wav(1, 440.0, i16::MAX, Path::new("a440_intervals.wav"))
+    // key 48 is A4, aka A440
+    write_wav(1, 48, i16::MAX, Path::new("a440_intervals.wav"))
 }
