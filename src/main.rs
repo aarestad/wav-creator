@@ -117,9 +117,6 @@ const PIANO_KEY_FREQS: [f64; 88] = [
     4186.009044809579,
 ];
 
-///
-/// Write a WAV file to `file_name`
-///
 /// WAV file format:
 ///
 /// Offset      Num bytes   Field ID        Description
@@ -144,22 +141,7 @@ const PIANO_KEY_FREQS: [f64; 88] = [
 /// 40          4           Subchunk2Size    Number of samples (i.e. SampleRate * length of the file
 ///                                          in seconds) * BlockAlign
 /// 44          *           Data             The actual sound data.
-///
-/// This function always writes the WAV with the following parameters:
-/// Sample rate: 44,100 samples/sec
-/// Bits per sample: 16
-/// Channels: 1 (monoaural)
-/// The sound produced is a 12*`duration_s` second-long tune, consisting
-/// of twelve `duration_s`-long intervals, starting at a half step going up to an octave, each
-/// with a `freq` frequency sine wave as the base.
-fn write_wav(duration_s: u32, key_num: usize, amp: i16, file_name: &Path) -> io::Result<()> {
-    let bytes_per_frame: u16 = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
-    let num_samples: u32 = SAMPLE_RATE * duration_s;
-    let data_chunk_size: u32 = num_samples * (bytes_per_frame as u32) * NUM_INTERVALS;
-    let file_size: u32 = 4 + HEADER_SIZE + FMT_CHUNK_SIZE + HEADER_SIZE + data_chunk_size;
-
-    let mut wav_output_file = BufWriter::with_capacity(2 << 20, File::create(file_name)?);
-
+fn write_wav_header(wav_output_file: &mut dyn Write, file_size: u32, bytes_per_frame: u16, data_chunk_size: u32) -> io::Result<()> {
     wav_output_file.write_all(RIFF_LABEL)?;
     wav_output_file.write_all(&file_size.to_le_bytes())?;
     wav_output_file.write_all(&FORMAT_LABEL)?;
@@ -175,6 +157,18 @@ fn write_wav(duration_s: u32, key_num: usize, amp: i16, file_name: &Path) -> io:
 
     wav_output_file.write_all(DATA_LABEL)?;
     wav_output_file.write_all(&data_chunk_size.to_le_bytes())?;
+
+    Ok(())
+}
+
+fn write_wav(duration_s: u32, key_num: usize, amp: i16, file_name: &Path) -> io::Result<()> {
+    let bytes_per_frame: u16 = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
+    let num_samples: u32 = SAMPLE_RATE * duration_s;
+    let data_chunk_size: u32 = num_samples * (bytes_per_frame as u32) * NUM_INTERVALS;
+    let file_size: u32 = 4 + HEADER_SIZE + FMT_CHUNK_SIZE + HEADER_SIZE + data_chunk_size;
+
+    let mut wav_output_file = BufWriter::with_capacity(2 << 20, File::create(file_name)?);
+    write_wav_header(&mut wav_output_file, file_size, bytes_per_frame, data_chunk_size)?;
 
     for num_half_steps in 1..=NUM_INTERVALS {
         let base_freq = signal::rate(SAMPLE_RATE.into())
