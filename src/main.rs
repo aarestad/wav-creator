@@ -167,7 +167,7 @@ fn write_wav(duration_s: u32, key_num: usize, amp: i16, file_name: &Path) -> io:
     let data_chunk_size: u32 = num_samples * (bytes_per_frame as u32) * NUM_INTERVALS;
     let file_size: u32 = 4 + HEADER_SIZE + FMT_CHUNK_SIZE + HEADER_SIZE + data_chunk_size;
 
-    let mut wav_output_file = BufWriter::with_capacity(2 << 20, File::create(file_name)?);
+    let mut wav_output_file = BufWriter::with_capacity(1 << 20, File::create(file_name)?);
     write_wav_header(&mut wav_output_file, file_size, bytes_per_frame, data_chunk_size)?;
 
     for num_half_steps in 1..=NUM_INTERVALS {
