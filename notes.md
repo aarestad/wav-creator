@@ -54,3 +54,7 @@ error: handle written amount returned or use `Write::write_all` instead
 68 |     wav_output_file.write(RIFF_LABEL)?;
    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ```
+
+`unreadable_literal` lint
+
+`fn foo(file: &mut dyn Write)` vs `fun foo<T: Write>(file: &mut T)`?
