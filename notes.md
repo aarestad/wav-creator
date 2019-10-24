@@ -31,6 +31,8 @@ the trait `std::convert::From<f64>` is not implemented for `i16` - probably beca
 
 `try_into()` and `into()`
 
+`into()` vs `as foo`?
+
 switched to doing a dumb iteration with a counter to using `take` and directly iterating
 
 explain how the chaining works
