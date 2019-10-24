@@ -3,7 +3,7 @@ one mentioned the [sample](https://docs.rs/sample/0.10.0/sample/) library
 how to write out little-endian? [byteorder](https://docs.rs/byteorder/1.3.2/byteorder/)
 how to play sounds? [portaudio](https://docs.rs/portaudio/0.7.0/portaudio/)
 
-using ?
+using `?`
 
 error: `core::str::<impl str>::as_bytes` is not yet stable as a const fn
 had to add `#![feature(const_str_as_bytes)]`
