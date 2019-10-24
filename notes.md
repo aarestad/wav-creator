@@ -57,4 +57,4 @@ error: handle written amount returned or use `Write::write_all` instead
 
 `unreadable_literal` lint
 
-`fn foo(file: &mut dyn Write)` vs `fun foo<T: Write>(file: &mut T)`?
+`fn foo(file: &mut dyn Write)` vs `fn foo<T: Write>(file: &mut T)`?
