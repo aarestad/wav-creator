@@ -4,5 +4,10 @@ if __name__ == '__main__':
     base_freq = 27.5  # A0
 
     for i in range(88):
-        print("%s," % base_freq)
+        if i % 12 == 0:
+            freq = 27.5 * 2 ** (i/12)
+        else:
+            freq = base_freq
+
+        print("%s," % freq)
         base_freq *= twelfth_root_of_two
