@@ -4,3 +4,4 @@
 *.wav
 /venv/
 .idea
+.direnv
