@@ -162,14 +162,13 @@ fn write_wav_header<T: Write>(wav_output_file: &mut T, file_size: u32, bytes_per
     Ok(())
 }
 
-fn write_wav(duration_s: u32, key_num: usize, amp: i16, file_name: &Path) -> io::Result<()> {
+fn write_wav<T: Write>(duration_s: u32, key_num: usize, amp: i16, wav_output_file: &mut T) -> io::Result<()> {
     let bytes_per_frame: u16 = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
     let num_samples: u32 = SAMPLE_RATE * duration_s;
     let data_chunk_size: u32 = num_samples * (bytes_per_frame as u32) * NUM_INTERVALS;
     let file_size: u32 = 4 + HEADER_SIZE + FMT_CHUNK_SIZE + HEADER_SIZE + data_chunk_size;
 
-    let mut wav_output_file = BufWriter::with_capacity(1 << 20, File::create(file_name)?);
-    write_wav_header(&mut wav_output_file, file_size, bytes_per_frame, data_chunk_size)?;
+    write_wav_header(wav_output_file, file_size, bytes_per_frame, data_chunk_size)?;
 
     for num_half_steps in 1..=NUM_INTERVALS {
         let base_freq = signal::rate(SAMPLE_RATE.into())
@@ -196,5 +195,7 @@ fn write_wav(duration_s: u32, key_num: usize, amp: i16, file_name: &Path) -> io:
 
 fn main() -> io::Result<()> {
     // key 48 is A4, aka A440
-    write_wav(1, 48, i16::MAX, Path::new("a440_intervals.wav"))
+    let path = Path::new("a440_intervals.wav");
+    let mut wav_output_file = BufWriter::with_capacity(1 << 20, File::create(path)?);
+    write_wav(1, 48, i16::MAX, &mut wav_output_file)
 }
