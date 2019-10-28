@@ -10,4 +10,5 @@ if __name__ == '__main__':
             freq = base_freq
 
         print("%s," % freq)
-        base_freq *= twelfth_root_of_two
+        freq *= twelfth_root_of_two
+        base_freq = freq
