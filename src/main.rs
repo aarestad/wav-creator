@@ -1,7 +1,12 @@
-use std::{fs::File, i16, io, io::{Write, BufWriter}, path::Path};
+use std::{
+    fs::File,
+    i16, io,
+    io::{BufWriter, Write},
+    path::Path,
+};
 
+use sample::signal::{ConstHz, ScaleAmp, Sine, Square};
 use sample::{signal, Signal};
-use sample::signal::{ScaleAmp, ConstHz, Sine, Square};
 
 /// Chunk labels
 const RIFF_LABEL: &[u8] = b"RIFF";
@@ -143,7 +148,12 @@ const PIANO_KEY_FREQS: [f64; 88] = [
 /// 40          4           Subchunk2Size    Number of samples (i.e. SampleRate * length of the file
 ///                                          in seconds) * BlockAlign
 /// 44          *           Data             The actual sound data.
-fn write_wav_header<T: Write>(wav_output_file: &mut T, file_size: u32, bytes_per_frame: u16, data_chunk_size: u32) -> io::Result<()> {
+fn write_wav_header<T: Write>(
+    wav_output_file: &mut T,
+    file_size: u32,
+    bytes_per_frame: u16,
+    data_chunk_size: u32,
+) -> io::Result<()> {
     wav_output_file.write_all(RIFF_LABEL)?;
     wav_output_file.write_all(&file_size.to_le_bytes())?;
     wav_output_file.write_all(&FORMAT_LABEL)?;
@@ -164,10 +174,7 @@ fn write_wav_header<T: Write>(wav_output_file: &mut T, file_size: u32, bytes_per
 }
 
 fn create_sine_wave(sample_rate: f64, hz: f64, amp: f64) -> ScaleAmp<Sine<ConstHz>> {
-    signal::rate(sample_rate)
-        .const_hz(hz)
-        .sine()
-        .scale_amp(amp)
+    signal::rate(sample_rate).const_hz(hz).sine().scale_amp(amp)
 }
 
 #[allow(dead_code)]
@@ -205,7 +212,12 @@ fn create_square_wave(sample_rate: f64, hz: f64, amp: f64) -> ScaleAmp<Square<Co
         .scale_amp(amp)
 }
 
-fn write_wav<T: Write>(duration_s: u32, key_num: usize, amp: i16, wav_output_file: &mut T) -> io::Result<()> {
+fn write_wav<T: Write>(
+    duration_s: u32,
+    key_num: usize,
+    amp: i16,
+    wav_output_file: &mut T,
+) -> io::Result<()> {
     let bytes_per_frame: u16 = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
     let num_samples: u32 = SAMPLE_RATE * duration_s;
     let data_chunk_size: u32 = num_samples * (bytes_per_frame as u32) * NUM_INTERVALS;
