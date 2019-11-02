@@ -33,7 +33,7 @@ const NUM_INTERVALS: u32 = 12;
 /// semitones after) are exact since they are 2-1 ratios of
 /// A4, which is defined at 440 Hz
 #[allow(clippy::unreadable_literal)]
-const PIANO_KEY_FREQS: [f64; 88] = [
+const _PIANO_KEY_FREQS: [f64; 88] = [
     27.5, // A0
     29.135235094880603,
     30.86770632850774,
@@ -124,6 +124,18 @@ const PIANO_KEY_FREQS: [f64; 88] = [
     4186.009044809579,
 ];
 
+// The 11-bit values used to generate piano key notes on an NES
+const PIANO_KEYS_PERIODS: [u16; 88] = [
+    0x0fe3,0x0efe,0x0e27,0x0d5b,0x0c9c,0x0be6,0x0b3b,0x0a9a,0x0a01,0x0972,0x08ea,0x086a,
+    0x07f1,0x077f,0x0713,0x06ad,0x064d,0x05f3,0x059d,0x054c,0x0500,0x04b8,0x0474,0x0434,
+    0x03f8,0x03bf,0x0389,0x0356,0x0326,0x02f9,0x02ce,0x02a6,0x0280,0x025c,0x023a,0x021a,
+    0x01fb,0x01df,0x01c4,0x01ab,0x0193,0x017c,0x0167,0x0152,0x013f,0x012d,0x011c,0x010c,
+    0x00fd,0x00ef,0x00e1,0x00d5,0x00c9,0x00bd,0x00b3,0x00a9,0x009f,0x0096,0x008e,0x0086,
+    0x007e,0x0077,0x0070,0x006a,0x0064,0x005e,0x0059,0x0054,0x004f,0x004b,0x0046,0x0042,
+    0x003f,0x003b,0x0038,0x0034,0x0031,0x002f,0x002c,0x0029,0x0027,0x0025,0x0023,0x0021,
+    0x001f,0x001d,0x001b,0x001a
+];
+
 /// WAV file format:
 ///
 /// Offset      Num bytes   Field ID        Description
@@ -173,7 +185,7 @@ fn write_wav_header<T: Write>(
     Ok(())
 }
 
-fn create_sine_wave(sample_rate: f64, hz: f64, amp: f64) -> ScaleAmp<Sine<ConstHz>> {
+fn _create_sine_wave(sample_rate: f64, hz: f64, amp: f64) -> ScaleAmp<Sine<ConstHz>> {
     signal::rate(sample_rate).const_hz(hz).sine().scale_amp(amp)
 }
 
@@ -181,27 +193,28 @@ fn create_sine_wave(sample_rate: f64, hz: f64, amp: f64) -> ScaleAmp<Sine<ConstH
 const NTSC_CLOCK_HZ: u32 = 1_789_773;
 
 // TODO support duty cycle?
-#[allow(dead_code)]
-fn create_nes_square_wave(mem: [u8; 4]) -> ScaleAmp<Square<ConstHz>> {
+fn create_nes_square_wave(sound_bytes: [u8; 4]) -> ScaleAmp<Square<ConstHz>> {
     // Byte 0: DDLC VVVV    Duty (D), envelope loop / length counter halt (L), constant volume (C), volume/envelope (V)
     // Byte 1: EPPP NSSS    Sweep unit: enabled (E), period (P), negate (N), shift (S)
     // Byte 2: TTTT TTTT    Timer low (T)
     // Byte 3: LLLL LTTT    Length counter load (L), timer high (T)
-    let volume = mem[0] & 0b1111;
-    let _const_vol = mem[0] >> 4 & 0b1 != 0;
-    let _length_counter_halt = mem[0] >> 5 & 0b1 != 0;
-    let _duty_cycle = mem[0] >> 6 & 0b11;
+    let volume = sound_bytes[0] & 0b1111;
+    let _const_vol = sound_bytes[0] >> 4 & 0b1 != 0;
+    let _length_counter_halt = sound_bytes[0] >> 5 & 0b1 != 0;
+    let _duty_cycle = sound_bytes[0] >> 6 & 0b11;
 
     // TODO sweep unit at mem[1]
+    let period_high_bits = ((sound_bytes[3] & 0b111).wrapping_shl(8)) as u16;
+    let period_low_bits = sound_bytes[2] as u16;
 
-    let period: u16 = ((mem[3] & 0b111) << 8) as u16 & mem[2] as u16;
-    let _length_counter_load = mem[3] >> 3;
+    let period: u16 = period_high_bits | period_low_bits;
+    let _length_counter_load = sound_bytes[3] >> 3 & 0b1_1111;
 
     let freq = NTSC_CLOCK_HZ / (16 * (period + 1)) as u32;
 
-    let amp = i16::MAX * (volume as i16 / 15);
+    let amp = i16::MAX as f64 * (volume as f64 / 15.0);
 
-    create_square_wave(SAMPLE_RATE.into(), freq.into(), amp.into())
+    create_square_wave(SAMPLE_RATE.into(), freq.into(), amp)
 }
 
 #[allow(dead_code)]
@@ -215,7 +228,6 @@ fn create_square_wave(sample_rate: f64, hz: f64, amp: f64) -> ScaleAmp<Square<Co
 fn write_wav<T: Write>(
     duration_s: u32,
     key_num: usize,
-    amp: i16,
     wav_output_file: &mut T,
 ) -> io::Result<()> {
     let bytes_per_frame: u16 = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
@@ -226,17 +238,19 @@ fn write_wav<T: Write>(
     write_wav_header(wav_output_file, file_size, bytes_per_frame, data_chunk_size)?;
 
     for num_half_steps in 1..=NUM_INTERVALS {
-        let base_freq = create_sine_wave(
-            SAMPLE_RATE.into(),
-            PIANO_KEY_FREQS[key_num],
-            (amp / 2).into(),
-        );
+        let base_freq = create_nes_square_wave([
+            0b10110111,
+            0b0,
+            (PIANO_KEYS_PERIODS[key_num] & 0xFF) as u8,
+            (PIANO_KEYS_PERIODS[key_num] >> 8 & 0x111) as u8,
+        ]);
 
-        let piano_half_steps_above = create_sine_wave(
-            SAMPLE_RATE.into(),
-            PIANO_KEY_FREQS[key_num + num_half_steps as usize],
-            (amp / 2).into(),
-        );
+        let piano_half_steps_above = create_nes_square_wave([
+            0b10110111,
+            0b0,
+            (PIANO_KEYS_PERIODS[key_num + num_half_steps as usize] & 0xFF) as u8,
+            (PIANO_KEYS_PERIODS[key_num + num_half_steps as usize] >> 8 & 0x111) as u8,
+        ]);
 
         let signal_iter = base_freq
             .add_amp(piano_half_steps_above)
@@ -254,5 +268,5 @@ fn main() -> io::Result<()> {
     // key 48 is A4, aka A440
     let path = Path::new("a440_intervals.wav");
     let mut wav_output_file = BufWriter::with_capacity(1 << 20, File::create(path)?);
-    write_wav(1, 48, i16::MAX, &mut wav_output_file)
+    write_wav(1, 48, &mut wav_output_file)
 }

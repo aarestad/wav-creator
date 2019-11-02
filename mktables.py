@@ -10,7 +10,7 @@
 # provided the copyright notice and this notice are preserved.
 # This file is offered as-is, without any warranty.
 
-lowestFreq = 55.0
+lowestFreq = 27.5
 ntscOctaveBase = 39375000.0 / (22 * 16 * lowestFreq)
 palOctaveBase = 266017125.0 / (10 * 16 * 16 * lowestFreq)
 maxNote = 88
