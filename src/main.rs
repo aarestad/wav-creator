@@ -207,7 +207,7 @@ fn create_nes_square_wave(sound_bytes: [u8; 4]) -> ScaleAmp<Square<ConstHz>> {
     let period_high_bits = ((sound_bytes[3] & 0b111).wrapping_shl(8)) as u16;
     let period_low_bits = sound_bytes[2] as u16;
 
-    let period: u16 = period_high_bits | period_low_bits;
+    let period = period_high_bits | period_low_bits;
     let _length_counter_load = sound_bytes[3] >> 3 & 0b1_1111;
 
     let freq = NTSC_CLOCK_HZ / (16 * (period + 1)) as u32;
@@ -235,14 +235,14 @@ fn write_wav<T: Write>(duration_s: u32, key_num: usize, wav_output_file: &mut T)
 
     for num_half_steps in 1..=NUM_INTERVALS {
         let base_freq = create_nes_square_wave([
-            0b10110111,
+            0b1011_0111,
             0b0,
             (PIANO_KEYS_PERIODS[key_num] & 0xFF) as u8,
             (PIANO_KEYS_PERIODS[key_num] >> 8 & 0x111) as u8,
         ]);
 
         let piano_half_steps_above = create_nes_square_wave([
-            0b10110111,
+            0b1011_0111,
             0b0,
             (PIANO_KEYS_PERIODS[key_num + num_half_steps as usize] & 0xFF) as u8,
             (PIANO_KEYS_PERIODS[key_num + num_half_steps as usize] >> 8 & 0x111) as u8,
