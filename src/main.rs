@@ -233,7 +233,7 @@ fn write_wav<T: Write>(duration_s: u32, key_num: usize, wav_output_file: &mut T)
 
     write_wav_header(wav_output_file, file_size, bytes_per_frame, data_chunk_size)?;
 
-    for num_half_steps in 1..=NUM_INTERVALS {
+    for num_half_steps in 1..=NUM_INTERVALS as usize {
         let base_freq = create_nes_square_wave([
             0b1011_0111,
             0b0,
@@ -244,8 +244,8 @@ fn write_wav<T: Write>(duration_s: u32, key_num: usize, wav_output_file: &mut T)
         let piano_half_steps_above = create_nes_square_wave([
             0b1011_0111,
             0b0,
-            (PIANO_KEYS_PERIODS[key_num + num_half_steps as usize] & 0xFF) as u8,
-            (PIANO_KEYS_PERIODS[key_num + num_half_steps as usize] >> 8 & 0x111) as u8,
+            (PIANO_KEYS_PERIODS[key_num + num_half_steps] & 0xFF) as u8,
+            (PIANO_KEYS_PERIODS[key_num + num_half_steps] >> 8 & 0x111) as u8,
         ]);
 
         let signal_iter = base_freq
