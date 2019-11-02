@@ -186,6 +186,7 @@ fn create_nes_square_wave(mem: [u8; 4]) -> ScaleAmp<Square<ConstHz>> {
     let _duty_cycle = mem[0] >> 6 & 0b11;
 
     // TODO sweep unit at mem[1]
+
     let period: u16 = ((mem[3] & 0b111) << 8) as u16 & mem[2] as u16;
     let _length_counter_load = mem[3] >> 3;
 
