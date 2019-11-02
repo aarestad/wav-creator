@@ -1,6 +1,7 @@
 use std::{fs::File, i16, io, io::{Write, BufWriter}, path::Path};
 
 use sample::{signal, Signal};
+use sample::signal::{ScaleAmp, ConstHz, Sine, Square};
 
 /// Chunk labels
 const RIFF_LABEL: &[u8] = b"RIFF";
@@ -162,6 +163,47 @@ fn write_wav_header<T: Write>(wav_output_file: &mut T, file_size: u32, bytes_per
     Ok(())
 }
 
+fn create_sine_wave(sample_rate: f64, hz: f64, amp: f64) -> ScaleAmp<Sine<ConstHz>> {
+    signal::rate(sample_rate)
+        .const_hz(hz)
+        .sine()
+        .scale_amp(amp)
+}
+
+#[allow(dead_code)]
+const NTSC_CLOCK_HZ: u32 = 1_789_773;
+
+// TODO support duty cycle?
+#[allow(dead_code)]
+fn create_nes_square_wave(mem: [u8; 4]) -> ScaleAmp<Square<ConstHz>> {
+    // Byte 0: DDLC VVVV    Duty (D), envelope loop / length counter halt (L), constant volume (C), volume/envelope (V)
+    // Byte 1: EPPP NSSS    Sweep unit: enabled (E), period (P), negate (N), shift (S)
+    // Byte 2: TTTT TTTT    Timer low (T)
+    // Byte 3: LLLL LTTT    Length counter load (L), timer high (T)
+    let volume = mem[0] & 0b1111;
+    let _const_vol = mem[0] >> 4 & 0b1 != 0;
+    let _length_counter_halt = mem[0] >> 5 & 0b1 != 0;
+    let _duty_cycle = mem[0] >> 6 & 0b11;
+
+    // TODO sweep unit at mem[1]
+    let period: u16 = ((mem[3] & 0b111) << 8) as u16 & mem[2] as u16;
+    let _length_counter_load = mem[3] >> 3;
+
+    let freq = NTSC_CLOCK_HZ / (16 * (period + 1)) as u32;
+
+    let amp = i16::MAX * (volume as i16 / 15);
+
+    create_square_wave(SAMPLE_RATE.into(), freq.into(), amp.into())
+}
+
+#[allow(dead_code)]
+fn create_square_wave(sample_rate: f64, hz: f64, amp: f64) -> ScaleAmp<Square<ConstHz>> {
+    signal::rate(sample_rate)
+        .const_hz(hz)
+        .square()
+        .scale_amp(amp)
+}
+
 fn write_wav<T: Write>(duration_s: u32, key_num: usize, amp: i16, wav_output_file: &mut T) -> io::Result<()> {
     let bytes_per_frame: u16 = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
     let num_samples: u32 = SAMPLE_RATE * duration_s;
@@ -171,15 +213,17 @@ fn write_wav<T: Write>(duration_s: u32, key_num: usize, amp: i16, wav_output_fil
     write_wav_header(wav_output_file, file_size, bytes_per_frame, data_chunk_size)?;
 
     for num_half_steps in 1..=NUM_INTERVALS {
-        let base_freq = signal::rate(SAMPLE_RATE.into())
-            .const_hz(PIANO_KEY_FREQS[key_num])
-            .sine()
-            .scale_amp((amp / 2).into());
+        let base_freq = create_sine_wave(
+            SAMPLE_RATE.into(),
+            PIANO_KEY_FREQS[key_num],
+            (amp / 2).into(),
+        );
 
-        let piano_half_steps_above = signal::rate(SAMPLE_RATE.into())
-            .const_hz(PIANO_KEY_FREQS[key_num + num_half_steps as usize])
-            .sine()
-            .scale_amp((amp / 2).into());
+        let piano_half_steps_above = create_sine_wave(
+            SAMPLE_RATE.into(),
+            PIANO_KEY_FREQS[key_num + num_half_steps as usize],
+            (amp / 2).into(),
+        );
 
         let signal_iter = base_freq
             .add_amp(piano_half_steps_above)
