@@ -7,3 +7,4 @@ edition = "2018"
 [dependencies]
 portaudio = "0.7"
 sample = "0.10"
+serde = "1.0.102"
