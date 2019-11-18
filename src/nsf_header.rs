@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct NsfHeader {
-    magic: [u8; 5],
+    magic: [u8; 5], // must be 'NESM\u{001a}'
     version_num: u8,
     total_songs: u8,
     starting_song: u8,
