@@ -13,7 +13,7 @@ struct NsfHeader {
     artist_name: [u8; 32],
     copyright_holder: [u8; 32],
     play_speed_ntsc: u16,
-    bankswitch_init: u8,
+    bankswitch_init: [u8; 8],
     play_speed_pal: u16,
     pal_ntsc_bits: u8,
     sound_chip_support: u8,
