@@ -9,3 +9,4 @@ rodio = "0.17.1"
 dasp = { version = "0.11.0", features = ["all"] }
 nom = "7.1.3"
 anyhow = "1.0.71"
+tetanes = "0.8.0"

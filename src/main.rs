@@ -270,9 +270,14 @@ fn main() -> io::Result<()> {
 
     let mario_nsf_data = &read("mario.nsf")?;
 
-    let mario_header = nsf_header::parse_nsf(mario_nsf_data);
+    let mario_header_and_data = nsf_header::parse_nsf(mario_nsf_data).expect("parsing failed");
+    let (mario_data, mario_header) = mario_header_and_data;
 
-    println!("{:?}", mario_header.unwrap().1);
+    println!("{:02X?}", mario_header);
+    println!(
+        "period is {} Hz",
+        1_000_000.0f64 / <u16 as std::convert::Into<f64>>::into(mario_header.play_speed_ntsc)
+    );
 
     Ok(())
 }

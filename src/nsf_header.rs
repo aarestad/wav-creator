@@ -53,7 +53,7 @@ pub struct NsfHeader {
     song_name: CString,
     artist_name: CString,
     copyright_holder: CString,
-    play_speed_ntsc: u16,
+    pub play_speed_ntsc: u16,
     bankswitch_init: [u8; 8],
     play_speed_pal: u16,
     pal_ntsc_bits: u8,
