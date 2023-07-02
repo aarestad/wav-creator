@@ -41,6 +41,7 @@ use std::ffi::CString;
 ///                 in a backward compatible way.
 /// $080    nnn ----    The music program/data follows
 
+#[allow(dead_code)] // for now
 #[derive(Debug)]
 pub struct NsfHeader {
     version_num: u8,

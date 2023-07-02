@@ -170,7 +170,7 @@ fn write_wav_header<T: Write>(
 ) -> io::Result<()> {
     wav_output_file.write_all(RIFF_LABEL)?;
     wav_output_file.write_all(&file_size.to_le_bytes())?;
-    wav_output_file.write_all(&FORMAT_LABEL)?;
+    wav_output_file.write_all(FORMAT_LABEL)?;
 
     wav_output_file.write_all(FMT_LABEL)?;
     wav_output_file.write_all(&FMT_CHUNK_SIZE.to_le_bytes())?;
