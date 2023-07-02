@@ -61,4 +61,4 @@ error: handle written amount returned or use `Write::write_all` instead
 
 `fn foo(file: &mut dyn Write)` vs `fn foo<T: Write>(file: &mut T)`?
 
-can't cast to bool; need to do, i.e., `mem[0] >> 4 & 0b1 != 0`
+can't cast to bool; need to do, e.g., `mem[0] >> 4 & 0b1 != 0`

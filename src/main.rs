@@ -1,12 +1,14 @@
 use std::{
-    fs::File,
+    fs::{read, File},
     i16, io,
     io::{BufWriter, Write},
     path::Path,
 };
 
-use sample::signal::{ConstHz, ScaleAmp, Sine, Square};
-use sample::{signal, Signal};
+use dasp::signal::{self as signal, Signal};
+use dasp::signal::{ConstHz, ScaleAmp, Sine, Square};
+
+mod nsf_header;
 
 /// Chunk labels
 const RIFF_LABEL: &[u8] = b"RIFF";
@@ -253,7 +255,7 @@ fn write_wav<T: Write>(duration_s: u32, key_num: usize, wav_output_file: &mut T)
             .take(num_samples as usize);
 
         for signal in signal_iter {
-            wav_output_file.write_all(&(signal[0] as i16).to_le_bytes())?;
+            wav_output_file.write_all(&(signal as i16).to_le_bytes())?;
         }
     }
 
@@ -264,5 +266,13 @@ fn main() -> io::Result<()> {
     // key 48 is A4, aka A440
     let path = Path::new("a440_intervals.wav");
     let mut wav_output_file = BufWriter::with_capacity(1 << 20, File::create(path)?);
-    write_wav(1, 48, &mut wav_output_file)
+    write_wav(1, 48, &mut wav_output_file)?;
+
+    let mario_nsf_data = &read("mario.nsf")?;
+
+    let mario_header = nsf_header::parse_nsf(mario_nsf_data);
+
+    println!("{:?}", mario_header.unwrap().1);
+
+    Ok(())
 }
